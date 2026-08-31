@@ -18,6 +18,7 @@ dependencies = [
   "safetensors==0.8.0",
   "sentencepiece==0.2.2",
   "torch==2.10.0",
+  "torchvision==0.25.0",
   "tqdm==4.67.3",
   "transformers==5.14.1",
   "peft==0.19.1",
