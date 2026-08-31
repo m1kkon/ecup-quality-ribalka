@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import hashlib
 import importlib.metadata
 import importlib.util
@@ -29,20 +30,57 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def run(command: list[str], cwd: Path | None = None, max_attempts: int = 1) -> None:
+def run(
+    command: list[str],
+    cwd: Path | None = None,
+    max_attempts: int = 1,
+    env: dict[str, str] | None = None,
+    log_path: Path | None = None,
+) -> None:
+    if log_path is not None:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
     for attempt in range(1, max_attempts + 1):
         print("+", " ".join(map(str, command)), flush=True)
+        tail: deque[str] = deque(maxlen=80)
+        stream = log_path.open("a", encoding="utf-8") if log_path is not None else None
+        if stream is not None:
+            stream.write(f"\n===== ATTEMPT {attempt}/{max_attempts} =====\n")
+            stream.flush()
+        process = subprocess.Popen(
+            command,
+            cwd=cwd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+        assert process.stdout is not None
         try:
-            subprocess.run(command, cwd=cwd, check=True)
+            for line in process.stdout:
+                print(line, end="", flush=True)
+                tail.append(line)
+                if stream is not None:
+                    stream.write(line)
+                    stream.flush()
+            returncode = process.wait()
+        finally:
+            if stream is not None:
+                stream.close()
+        if returncode == 0:
             return
-        except subprocess.CalledProcessError:
-            if attempt == max_attempts:
-                raise
-            print(
-                f"COMMAND_RETRY attempt={attempt + 1}/{max_attempts}; "
-                "completed BAD members will be reused",
-                flush=True,
-            )
+        message = (
+            f"Command failed with exit code {returncode}: {' '.join(map(str, command))}\n"
+            f"LAST_CHILD_OUTPUT:\n{''.join(tail)}"
+        )
+        if attempt == max_attempts:
+            raise RuntimeError(message)
+        print(message, flush=True)
+        print(
+            f"COMMAND_RETRY attempt={attempt + 1}/{max_attempts}; "
+            "completed BAD members will be reused",
+            flush=True,
+        )
 
 
 def train_bad(args: argparse.Namespace) -> None:
@@ -50,10 +88,11 @@ def train_bad(args: argparse.Namespace) -> None:
     if not data.is_file():
         raise FileNotFoundError(f"Training data not found: {data}")
     spec = ROOT / "bad" / "specs" / "spec_es5_vote3.json"
+    out = Path(args.out).resolve()
     run([
         sys.executable, "-m", "src.fit_final", "--spec", str(spec),
-        "--data", str(data), "--out", str(Path(args.out).resolve()),
-    ], cwd=ROOT / "bad", max_attempts=2)
+        "--data", str(data), "--out", str(out),
+    ], cwd=ROOT / "bad", max_attempts=2, log_path=out.parent / "train_bad.log")
 
 
 def bad_artifacts_complete(path: Path) -> bool:
@@ -82,8 +121,12 @@ def train_lvj(args: argparse.Namespace) -> None:
         env["LVJ_BASE_MODEL_PATH"] = str(model.resolve()) if model.exists() else args.model
     if args.out:
         env["LVJ_OUTPUT_ROOT"] = str(Path(args.out).resolve())
-    print("+", sys.executable, ROOT / "lvj" / "train_dora.py", flush=True)
-    subprocess.run([sys.executable, str(ROOT / "lvj" / "train_dora.py")], env=env, check=True)
+    out = Path(args.out).resolve()
+    run(
+        [sys.executable, str(ROOT / "lvj" / "train_dora.py")],
+        env=env,
+        log_path=out.parent / "train_lvj.log",
+    )
 
 
 def exact_key(name: object, description: object) -> str:
