@@ -129,6 +129,28 @@ def train_lvj(args: argparse.Namespace) -> None:
     )
 
 
+def lvj_artifacts_complete(path: Path) -> bool:
+    if not path.is_dir():
+        return False
+    try:
+        root = find_training_root(path)
+    except FileNotFoundError:
+        return False
+    final_adapter = root / "checkpoints" / "epoch_3p000" / "adapter" / "adapter_model.safetensors"
+    return final_adapter.is_file() and (root / "training_summary.json").is_file()
+
+
+def preserve_incomplete_directory(path: Path) -> Path:
+    index = 1
+    while True:
+        candidate = path.with_name(f"{path.name}.incomplete-{index}")
+        if not candidate.exists():
+            path.rename(candidate)
+            print(f"PRESERVED_INCOMPLETE source={path} destination={candidate}", flush=True)
+            return candidate
+        index += 1
+
+
 def exact_key(name: object, description: object) -> str:
     payload = json.dumps([str(name), str(description)], ensure_ascii=False,
                          separators=(",", ":")).encode("utf-8")
@@ -168,7 +190,7 @@ def find_training_root(path: Path) -> Path:
     path = path.resolve()
     if (path / "processor").is_dir() and (path / "checkpoints").is_dir():
         return path
-    matches = [p.parent for p in path.rglob("processor/processor_config.json")
+    matches = [p.parent.parent for p in path.rglob("processor/processor_config.json")
                if (p.parent.parent / "checkpoints").is_dir()]
     if len(matches) != 1:
         raise FileNotFoundError(f"Expected one LVJ training root under {path}, found {matches}")
@@ -299,9 +321,16 @@ def all_pipeline(args: argparse.Namespace) -> None:
         if not bad_artifacts_complete(bad_out):
             raise RuntimeError(f"BAD stage finished without complete artifacts: {bad_out}")
         print(f"STAGE_BAD=DONE path={bad_out}", flush=True)
-    print(f"STAGE_LVJ=START path={lvj_out}", flush=True)
-    train_lvj(argparse.Namespace(data=args.data, model=args.model, out=str(lvj_out)))
-    print(f"STAGE_LVJ=DONE path={lvj_out}", flush=True)
+    if lvj_artifacts_complete(lvj_out):
+        print(f"STAGE_LVJ=REUSE path={lvj_out}", flush=True)
+    else:
+        if lvj_out.exists():
+            preserve_incomplete_directory(lvj_out)
+        print(f"STAGE_LVJ=START path={lvj_out}", flush=True)
+        train_lvj(argparse.Namespace(data=args.data, model=args.model, out=str(lvj_out)))
+        if not lvj_artifacts_complete(lvj_out):
+            raise RuntimeError(f"LVJ stage finished without complete artifacts: {lvj_out}")
+        print(f"STAGE_LVJ=DONE path={lvj_out}", flush=True)
     print(f"STAGE_BUILD=START path={submission_out}", flush=True)
     build(argparse.Namespace(
         data=args.data,
