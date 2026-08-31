@@ -122,7 +122,7 @@ DoRA checkpoint, processor, exact lookup и vendored PEFT, затем фикси
 ## Быстрый старт
 
 ```bash
-uv venv .venv
+uv venv .venv --python 3.12
 uv pip install --python .venv/bin/python -e .
 .venv/bin/python solution.py --help
 ```
@@ -132,32 +132,32 @@ uv pip install --python .venv/bin/python -e .
 ```bash
 # Один end-to-end запуск:
 .venv/bin/python solution.py all \
-  --workdir /kaggle/working/ecup_reproduction \
+  --workdir ./ecup_reproduction \
   --epoch 2 \
   --zip
 
 # Те же стадии по отдельности, если обучение разнесено по сессиям:
 # 1. Обучить четыре BAD-энкодера; Qwen остаётся frozen runtime member.
-python solution.py train-bad \
-  --out /kaggle/working/bad_artifacts
+.venv/bin/python solution.py train-bad \
+  --out ./bad_artifacts
 
 # 2. Обучить LVJ DoRA. При отсутствии локального Qwen он скачивается с HF.
-python solution.py train-lvj \
-  --out /kaggle/working/lvj_training
+.venv/bin/python solution.py train-lvj \
+  --out ./lvj_training
 
 # 3. Собрать runtime: exact lookup -> rules from best.zip -> DoRA fallback.
-python solution.py build \
-  --bad-artifacts /kaggle/working/bad_artifacts \
-  --lvj-training /kaggle/working/lvj_training \
+.venv/bin/python solution.py build \
+  --bad-artifacts ./bad_artifacts \
+  --lvj-training ./lvj_training \
   --epoch 2 \
-  --out /kaggle/working/ecup_submission \
+  --out ./ecup_submission \
   --zip
 ```
 
 Готовый runtime запускается так:
 
 ```bash
-python run.py -i /path/to/test.csv -o /path/to/submission.csv
+.venv/bin/python run.py -i /path/to/test.csv -o /path/to/submission.csv
 ```
 
 `data/data.csv` используется автоматически. Если backbone отсутствует локально и

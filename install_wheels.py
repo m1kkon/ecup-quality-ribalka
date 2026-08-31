@@ -10,7 +10,6 @@ import importlib
 import importlib.metadata
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 
@@ -28,7 +27,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--wheel-dir", help="optional local wheel directory; package index is fallback")
     ap.add_argument("--venv", default=".venv")
-    ap.add_argument("--python", default=sys.executable)
+    ap.add_argument(
+        "--python",
+        default="3.12",
+        help="Python interpreter for the venv; the project requires Python 3.12",
+    )
     ap.add_argument(
         "--system-site-packages", action="store_true",
         help="reuse preinstalled Torch/CUDA packages (useful on managed GPU images)",
@@ -45,6 +48,14 @@ def main() -> None:
     if not (venv / "pyvenv.cfg").is_file():
         run(create)
     venv_python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    version = subprocess.check_output(
+        [str(venv_python), "-c", "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"],
+        text=True,
+    ).strip()
+    if version != "3.12":
+        raise SystemExit(
+            f"Incompatible existing venv uses Python {version}; remove {venv} and recreate it with Python 3.12"
+        )
 
     install = [
         "uv", "pip", "install", "--python", str(venv_python),
