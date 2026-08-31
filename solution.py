@@ -29,9 +29,20 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def run(command: list[str], cwd: Path | None = None) -> None:
-    print("+", " ".join(map(str, command)), flush=True)
-    subprocess.run(command, cwd=cwd, check=True)
+def run(command: list[str], cwd: Path | None = None, max_attempts: int = 1) -> None:
+    for attempt in range(1, max_attempts + 1):
+        print("+", " ".join(map(str, command)), flush=True)
+        try:
+            subprocess.run(command, cwd=cwd, check=True)
+            return
+        except subprocess.CalledProcessError:
+            if attempt == max_attempts:
+                raise
+            print(
+                f"COMMAND_RETRY attempt={attempt + 1}/{max_attempts}; "
+                "completed BAD members will be reused",
+                flush=True,
+            )
 
 
 def train_bad(args: argparse.Namespace) -> None:
@@ -42,7 +53,7 @@ def train_bad(args: argparse.Namespace) -> None:
     run([
         sys.executable, "-m", "src.fit_final", "--spec", str(spec),
         "--data", str(data), "--out", str(Path(args.out).resolve()),
-    ], cwd=ROOT / "bad")
+    ], cwd=ROOT / "bad", max_attempts=2)
 
 
 def bad_artifacts_complete(path: Path) -> bool:
