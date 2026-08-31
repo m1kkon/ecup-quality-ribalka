@@ -1,0 +1,9 @@
+# Critical runtime pins enforced by lvj/train_dora.py.
+# Generate the complete lock on Kaggle with:
+# .venv/bin/python solution.py freeze-env --output requirements.txt
+transformers==5.14.1
+safetensors==0.8.0
+peft==0.19.1
+accelerate==1.14.0
+sentencepiece==0.2.2
+torch==2.10.0

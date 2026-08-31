@@ -1,0 +1,100 @@
+{
+ "threshold": 0.5,
+ "weights": [
+  0.451,
+  0.191,
+  0.138,
+  0.02,
+  0.2
+ ],
+ "lvj_mode": "zero",
+ "members": [
+  {
+   "name": "rosb-ev-clsmean",
+   "kind": "enc",
+   "model": "ai-forever/ru-en-RoSBERTa",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "epochs": 4,
+   "lr": 2e-05,
+   "bs": 16,
+   "seed": 42,
+   "accum": 2,
+   "head_type": "cls_mean",
+   "threshold": 0.533
+  },
+  {
+   "name": "rmb-ev-s2024",
+   "kind": "enc",
+   "model": "deepvk/RuModernBERT-base",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "epochs": 4,
+   "lr": 4e-05,
+   "bs": 32,
+   "seed": 2024,
+   "threshold": 0.469
+  },
+  {
+   "name": "berta-ev-clsmean",
+   "kind": "enc",
+   "model": "sergeyzh/BERTA",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "epochs": 5,
+   "lr": 2e-05,
+   "bs": 16,
+   "seed": 42,
+   "accum": 2,
+   "head_type": "cls_mean",
+   "threshold": 0.579
+  },
+  {
+   "name": "rosb-head512f",
+   "kind": "enc",
+   "model": "ai-forever/ru-en-RoSBERTa",
+   "text": "head",
+   "max_len": 512,
+   "epochs": 4,
+   "lr": 2e-05,
+   "bs": 16,
+   "accum": 2,
+   "seed": 42,
+   "threshold": 0.314
+  },
+  {
+   "name": "qwen",
+   "kind": "llm",
+   "model": "Qwen/Qwen3.5-4B",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 1024,
+   "bs": 16,
+   "threshold": 0.447,
+   "fewshot": true
+  }
+ ],
+ "cv": {
+  "note": "взвешенный бленд, порог 0.5",
+  "f1": 0.9527,
+  "weights": {
+   "rosb-ev-clsmean": 0.451,
+   "rmb-ev-s2024": 0.191,
+   "berta-ev-clsmean": 0.138,
+   "rosb-head512f": 0.02,
+   "qwen": 0.2
+  }
+ },
+ "use_exact_lookup": false
+}

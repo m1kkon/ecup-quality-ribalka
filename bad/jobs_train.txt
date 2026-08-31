@@ -1,0 +1,4 @@
+python -m src.train_enc --model ai-forever/ru-en-RoSBERTa --text ev --head 400 --radius 140 --budget 1600 --max_len 512 --epochs 3 --lr 2e-5 --bs 16 --accum 2 --head_type cls_mean --seed 42 --name ft-rosbcm
+python -m src.train_enc --model deepvk/RuModernBERT-base --text ev --head 400 --radius 140 --budget 1600 --max_len 512 --epochs 5 --lr 4e-5 --bs 32 --accum 1 --seed 42 --name ft-rmbcm
+python -m src.train_enc --model sergeyzh/BERTA --text ev --head 400 --radius 140 --budget 1600 --max_len 512 --epochs 4 --lr 2e-5 --bs 16 --accum 2 --head_type cls_mean --seed 42 --name ft-bertacm
+python -m src.train_enc --model ai-forever/ru-en-RoSBERTa --text head --head 400 --radius 140 --budget 1600 --max_len 512 --epochs 2 --lr 2e-5 --bs 16 --accum 2 --seed 42 --name ft-rosbhead

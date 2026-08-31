@@ -1,0 +1,26 @@
+{
+  "bad_source_archive": {
+    "name": "bad-reproducible.zip",
+    "sha256": "3fcd5ac97686e6a11ffd7d7c39fd8a24e74a9270ad998995d3d07d99fd8925a4"
+  },
+  "lvj_training_source": {
+    "name": "BEST_DORA_3E_DATA_AGREED_RULES_YESNO_FULLTRAIN.py",
+    "sha256": "297e22f543a62edd5984c6a252431d58db78f1aea61cc6911b0f6526fa19d0e4",
+    "repository_change": "path overrides only: data, base model, output root"
+  },
+  "production_source_archive": {
+    "name": "best.zip",
+    "sha256": "a73a2a0a5ccd7ea6f5b6960a8523e8078a5c754f488f3f3cf9831fa61b051da2"
+  },
+  "lvj_order_aware_rules_sha256": "a94ec525ca4f057bb02048a828b0d2ea9131ddba571c1d5455452f50bf3c0f84",
+  "kaggle_environment_snapshot": {
+    "name": "requirements-kaggle-frozen.txt",
+    "packages": 931,
+    "sha256": "dc41c817182c0102aab1ed9785efb437c2a5962a3ebb4d318f4bcafb3ef59ee9"
+  },
+  "training_data": {
+    "repository_path": "data/data.csv",
+    "sha256": "4bc59e640563160fa04572b570606ceb1dd3d31627c6cf7fd1750ae4ea61f510"
+  },
+  "expected_training_data_sha256": "4bc59e640563160fa04572b570606ceb1dd3d31627c6cf7fd1750ae4ea61f510"
+}

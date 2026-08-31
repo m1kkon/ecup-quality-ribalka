@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ecup-quality-reproducible"
+version = "0.1.0"
+description = "Reproducible E-CUP 2026 product quality classifiers"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "accelerate==1.14.0",
+  "joblib==1.5.3",
+  "numpy==2.0.2",
+  "pandas==2.3.3",
+  "pillow==11.3.0",
+  "scikit-learn==1.6.1",
+  "scipy==1.16.3",
+  "safetensors==0.8.0",
+  "sentencepiece==0.2.2",
+  "torch==2.10.0",
+  "tqdm==4.67.3",
+  "transformers==5.14.1",
+  "peft==0.19.1",
+]
+
+[tool.setuptools]
+packages = []

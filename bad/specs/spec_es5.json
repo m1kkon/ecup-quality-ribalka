@@ -1,0 +1,101 @@
+{
+ "combine": "majority",
+ "votes_needed": 4,
+ "threshold": 0.5,
+ "weights": [
+  0.2,
+  0.2,
+  0.2,
+  0.2,
+  0.2
+ ],
+ "lvj_mode": "zero",
+ "use_exact_lookup": false,
+ "members": [
+  {
+   "kind": "enc",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "lr": 2e-05,
+   "bs": 16,
+   "accum": 2,
+   "seed": 42,
+   "head_type": "cls_mean",
+   "threshold": 0.5,
+   "name": "ft-rosbcm",
+   "model": "ai-forever/ru-en-RoSBERTa",
+   "epochs": 3
+  },
+  {
+   "kind": "enc",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "lr": 4e-05,
+   "bs": 32,
+   "accum": 1,
+   "seed": 42,
+   "head_type": "cls_mean",
+   "threshold": 0.5,
+   "name": "ft-rmbcm",
+   "model": "deepvk/RuModernBERT-base",
+   "epochs": 5
+  },
+  {
+   "kind": "enc",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "lr": 2e-05,
+   "bs": 16,
+   "accum": 2,
+   "seed": 42,
+   "head_type": "cls_mean",
+   "threshold": 0.5,
+   "name": "ft-bertacm",
+   "model": "sergeyzh/BERTA",
+   "epochs": 4
+  },
+  {
+   "kind": "enc",
+   "text": "head",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 512,
+   "lr": 2e-05,
+   "bs": 16,
+   "accum": 2,
+   "seed": 42,
+   "head_type": "default",
+   "threshold": 0.5,
+   "name": "ft-rosbhead",
+   "model": "ai-forever/ru-en-RoSBERTa",
+   "epochs": 2
+  },
+  {
+   "name": "qwen",
+   "kind": "llm",
+   "model": "Qwen/Qwen3.5-4B",
+   "text": "ev",
+   "head": 400,
+   "radius": 140,
+   "budget": 1600,
+   "max_len": 1024,
+   "bs": 16,
+   "fewshot": true,
+   "threshold": 0.5
+  }
+ ],
+ "cv": {
+  "note": "ранняя остановка по F1@0.5, эпохи 3/5/4/2, голосование 4 из 5, пороги 0.5",
+  "f1": 0.954
+ }
+}
