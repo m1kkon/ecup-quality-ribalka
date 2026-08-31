@@ -45,6 +45,23 @@ def train_bad(args: argparse.Namespace) -> None:
     ], cwd=ROOT / "bad")
 
 
+def bad_artifacts_complete(path: Path) -> bool:
+    manifest = path / "ensemble.json"
+    if not manifest.is_file():
+        return False
+    config = json.loads(manifest.read_text(encoding="utf-8"))
+    for member in config["members"]:
+        if member["kind"] == "enc":
+            directory = path / member["name"]
+            required = ("model.safetensors", "spec.json", "tokenizer_config.json")
+            if not all((directory / filename).is_file() for filename in required):
+                return False
+        elif member["kind"] in {"tfidf", "gbm"}:
+            if not (path / f"{member['name']}.joblib").is_file():
+                return False
+    return True
+
+
 def train_lvj(args: argparse.Namespace) -> None:
     env = os.environ.copy()
     if args.data:
@@ -220,8 +237,18 @@ def all_pipeline(args: argparse.Namespace) -> None:
     bad_out = work / "bad_artifacts"
     lvj_out = work / "lvj_training"
     submission_out = work / "submission"
-    train_bad(argparse.Namespace(data=args.data, out=str(bad_out)))
+    if bad_artifacts_complete(bad_out):
+        print(f"STAGE_BAD=REUSE path={bad_out}", flush=True)
+    else:
+        print(f"STAGE_BAD=START path={bad_out}", flush=True)
+        train_bad(argparse.Namespace(data=args.data, out=str(bad_out)))
+        if not bad_artifacts_complete(bad_out):
+            raise RuntimeError(f"BAD stage finished without complete artifacts: {bad_out}")
+        print(f"STAGE_BAD=DONE path={bad_out}", flush=True)
+    print(f"STAGE_LVJ=START path={lvj_out}", flush=True)
     train_lvj(argparse.Namespace(data=args.data, model=args.model, out=str(lvj_out)))
+    print(f"STAGE_LVJ=DONE path={lvj_out}", flush=True)
+    print(f"STAGE_BUILD=START path={submission_out}", flush=True)
     build(argparse.Namespace(
         data=args.data,
         bad_artifacts=str(bad_out),
@@ -231,6 +258,7 @@ def all_pipeline(args: argparse.Namespace) -> None:
         out=str(submission_out),
         zip=args.zip,
     ))
+    print(f"STAGE_BUILD=DONE path={submission_out}", flush=True)
 
 
 def parser() -> argparse.ArgumentParser:

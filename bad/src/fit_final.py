@@ -97,6 +97,20 @@ def fit_gbm(spec, df, y, outdir: Path):
     return spec["name"]
 
 
+def member_complete(spec, outdir: Path) -> bool:
+    """Return true only for a fully persisted production member."""
+    kind = spec["kind"]
+    name = spec["name"]
+    if kind == "enc":
+        directory = outdir / name
+        return all((directory / filename).is_file() for filename in (
+            "model.safetensors", "spec.json", "tokenizer_config.json",
+        ))
+    if kind in {"tfidf", "gbm"}:
+        return (outdir / f"{name}.joblib").is_file()
+    return kind == "llm"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--spec", required=True)
@@ -126,6 +140,13 @@ def main():
             continue
         k = s["kind"]
         print(f"--- {s['name']} ({k})", flush=True)
+        if member_complete(s, out):
+            print(f"  reuse completed member {s['name']}", flush=True)
+            continue
+        partial = out / s["name"]
+        if k == "enc" and partial.exists():
+            print(f"  remove incomplete member {partial}", flush=True)
+            shutil.rmtree(partial)
         if k == "enc":
             fit_encoder(s, df, y, out)
         elif k == "tfidf":
@@ -139,6 +160,9 @@ def main():
         else:
             raise ValueError(k)
     if not only:
+        incomplete = [s["name"] for s in cfg["members"] if not member_complete(s, out)]
+        if incomplete:
+            raise RuntimeError(f"BAD artifacts incomplete: {incomplete}")
         json.dump(cfg, open(out / "ensemble.json", "w"), ensure_ascii=False, indent=1)
     print("done ->", out, flush=True)
 
